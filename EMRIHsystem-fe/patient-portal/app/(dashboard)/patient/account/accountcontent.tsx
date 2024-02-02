@@ -185,7 +185,7 @@ const AccountContentPage: React.FC = () => {
     setPopupOpen(true)
   };
 
-  const isButtonDisabled = !nama || !phoneNumber || !email || !address || !weight || !height
+  const isButtonDisabled = !nama || !phoneNumber || !email || !address || !bloodType
   
   return (
       <div className="flex min-h-screen">

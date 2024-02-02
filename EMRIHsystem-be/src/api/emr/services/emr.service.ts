@@ -148,7 +148,7 @@ export class EmrService {
       const patients = await Promise.all(
         appointments.map(async (appointment) => {
           let patient;
-          if (appointment.walkin === false) {
+          if (!appointment.walkin) {
             patient = await this.patientRepository.findOne({
               pid: appointment.pid,
             });
@@ -156,6 +156,12 @@ export class EmrService {
             patient = await this.walkinPatientRepository.findOne({
               pid: appointment.pid,
             });
+
+            if (!patient) {
+              patient = await this.patientRepository.findOne({
+                pid: appointment.pid,
+              });
+            }
           }
 
           const schedule = await this.scheduleRepository.findOne({
