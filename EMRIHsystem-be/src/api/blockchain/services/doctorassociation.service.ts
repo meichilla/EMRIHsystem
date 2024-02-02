@@ -297,6 +297,11 @@ export class DoctorAssociationService {
         patient = await this.walkinPatientRepository.findOne({
           pid: appointment.pid,
         });
+        if (!patient) {
+          patient = await this.patientRepository.findOne({
+            pid: appointment.pid,
+          });
+        }
       } else {
         patient = await this.patientRepository.findOne({
           pid: appointment.pid,
@@ -327,6 +332,7 @@ export class DoctorAssociationService {
           indonesiaDate,
         )
         .call();
+      console.log('isassociated', result);
       return result;
     } catch (error) {
       throw new Error(

@@ -152,12 +152,12 @@ const PrescriptionContent: React.FC = () => {
             <div className="col-span-1 w-full mx-auto max-h-screen ml-16 border my-16 px-8 rounded-[20px]"
               style={{
                 overflow: 'auto',
-                maxHeight: '870px',
+                maxHeight: '850px',
               }}
             >
               <h4 className="h4 mt-5">Doctor Prescriptions ({doctorPrescriptions.length})</h4>
               {doctorPrescriptions.length > 0 ? (
-                <div className="mt-5 items-center">
+                <div className="mt-5 pb-16 items-center">
                     {/* Group prescriptions by appointment session */}
                     {Array.from(new Set(doctorPrescriptions.map((prescription) => prescription.appointmentId))).map((appointmentId, index) => {
                     const prescriptionsForAppointment = doctorPrescriptions.filter((prescription) => prescription.appointmentId === appointmentId);
@@ -201,7 +201,7 @@ const PrescriptionContent: React.FC = () => {
               }}
             >
               <h4 className="h4 my-5">Patient Additions ({patientAdditions.length})</h4>
-              <div className="text-[24px]">
+              <div className="text-[24px] pb-8">
               {patientAdditions.length > 0 ? (
                 <>
                 {patientAdditions.map((prescription, index) => (

@@ -1196,9 +1196,9 @@ illnessDiagnosis
           <><h5 className="text-lg absolute top-0 right-0 max-w-8xl mx-auto mr-8 p-2 font-semibold">
             {currentDayAndDate}
           </h5><div className="border-l border max-w-8xl mx-auto min-h-screen w-full">
-              <h4 className="h4 mt-5 ml-16 ">Patient List ({filterPatients().length})</h4>
+              <h4 className="h4 mt-5 ml-24 ">Patient List ({filterPatients().length})</h4>
 
-              <form className="ml-16 flex mt-8">
+              <form className="ml-24 flex mt-8">
                 <input
                   type="search"
                   name="search"
@@ -1209,7 +1209,7 @@ illnessDiagnosis
                   style={{ width: '65%' }} />
                 <datalist id="patients">{/* Fetch and render doctor options dynamically */}</datalist>
               </form>
-            </div><div className="max-w-6xl mx-auto h-full w-full ml-96 mt-36 absolute pr-16 pb-6"
+            </div><div className="max-w-4xl mx-auto h-full w-full ml-96 mt-36 absolute pr-16 pb-6"
               style={{
                 overflow: 'auto',
                 maxHeight: '800px',

@@ -187,6 +187,25 @@ export class PatientEMRService {
       });
       if (checkEmailExist) return new Error('Email is already registered');
 
+      const checkWalkinPatientExistByNIC =
+        await this.walkinPatientRepository.findOne({
+          pnic: nic,
+        });
+
+      console.log(checkWalkinPatientExistByNIC);
+      if (checkWalkinPatientExistByNIC) {
+        const pdob = checkWalkinPatientExistByNIC.pdob
+          .toISOString()
+          .split('T')[0];
+        const dobMatch = pdob === dob;
+        const nameMatch = checkWalkinPatientExistByNIC.pname === name;
+        console.log(dobMatch);
+        console.log(nameMatch);
+
+        if (!dobMatch || !nameMatch)
+          return new Error('NIC is already registered');
+      }
+
       // Validate if the provided wallet address is a valid Ethereum address
       await this.validateWalletAddress(walletAddress);
 
@@ -197,6 +216,7 @@ export class PatientEMRService {
       const token = await this.generateToken(email);
 
       const checkEMRExist = await this.isEMRDataExist(nic, dob);
+      console.log(checkEMRExist);
 
       let noMR;
       if (checkEMRExist.exists) {
@@ -204,6 +224,8 @@ export class PatientEMRService {
       } else {
         noMR = await this.generateNoRekamMedis();
       }
+
+      console.log(noMR);
 
       const urlKTP = 'http://localhost:3002';
 
@@ -1290,11 +1312,16 @@ export class PatientEMRService {
         pid: pid,
       });
 
-      const patientRegistered = await this.patientRepository.findOne({
-        pnic: patient.pnic,
-      });
-
-      if (patientRegistered) patient = patientRegistered;
+      if (!patient) {
+        patient = await this.patientRepository.findOne({
+          pid: pid,
+        });
+      } else {
+        const patientRegistered = await this.patientRepository.findOne({
+          pnic: patient.pnic,
+        });
+        if (patientRegistered) patient = patientRegistered;
+      }
     } else {
       patient = await this.patientRepository.findOne({
         pid: pid,
@@ -1302,7 +1329,6 @@ export class PatientEMRService {
     }
 
     const nic = patient.pnic;
-    console.log('nic', nic);
     const latestMedRec = await this.logChangesRepository.findOne(
       { nic: nic },
       { orderBy: { timestamp: 'DESC' } },
@@ -1415,9 +1441,15 @@ export class PatientEMRService {
   async getLatestSOAP(appointmentId: number) {
     const appointment = await this.appointmentService.findOne(appointmentId);
     const schedule = await this.scheduleService.findOne(appointment.scheduleid);
-    const patient = await this.patientRepository.findOne({
+    let patient;
+    patient = await this.patientRepository.findOne({
       pid: appointment.pid,
     });
+    if (!patient) {
+      patient = await this.walkinPatientRepository.findOne({
+        pid: appointment.pid,
+      });
+    }
     const doctor = await this.doctorRepository.findOne({
       docid: schedule.docid,
     });
