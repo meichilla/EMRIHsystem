@@ -25,12 +25,13 @@ export class AuthController {
   async getAdminHashPassword(@Body() body: { data: string }) {
     const decryptedData = JSON.parse(decrypt(body.data));
     const admin = await this.authService.findAdmin(decryptedData);
-    const result = encrypt(JSON.stringify({
-      password: admin.password,
-      email: admin.email,
-      username: admin.username,
-      }
-    ));
+    const result = encrypt(
+      JSON.stringify({
+        password: admin.password,
+        email: admin.email,
+        username: admin.username,
+      }),
+    );
     return result;
   }
 
@@ -52,7 +53,7 @@ export class AuthController {
   }
 
   @Post('/refresh-token')
-  async refreshToken(@Body() body: { refreshToken: string}) {
+  async refreshToken(@Body() body: { refreshToken: string }) {
     console.log(this.refreshToken);
     const { accessToken } = await this.jwtService.refreshToken(
       body.refreshToken,

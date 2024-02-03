@@ -18,6 +18,7 @@ import { IoMdArrowDropdown, IoMdArrowDropup } from "react-icons/io";
 import EmptyTableData from "./empty_table_data";
 import { IoArrowBackCircleOutline } from "react-icons/io5";
 import Spinner from "@/public/common/spinner";
+import { uploadFiles } from "@/components/utils/filestorage";
 
 interface IllnessDiagnosis {
   code: string;
@@ -71,9 +72,23 @@ interface HistoryIllnessDiagnosis {
   treatment: string;
 }
 
+type Document = {
+  appointmentid: number,
+  filename: string,
+  filesize: number,
+  filetype: string,
+  date: Date,
+  fileUrl: string,
+}
+
+type FileWithPreview = {
+  file: File;
+  dataUrl: string;
+};
+
 const PatientPage: React.FC = () => {
   const [warningMessage, setWarningMessage] = useState('');
-  const { hospital, doctorData, searchKeySession, emr, setSearchKeySession, setEMRData, setAuthData, appointmentHistory, patientAdditions, doctorPrescriptions, soapNotes, noMR, dob, personalData, illnessDiagnosis} = useAuth();
+  const { hospital, doctorData, searchKeySession, emr, setSearchKeySession, setEMRData, setAuthData, appointmentHistory, patientAdditions, doctorPrescriptions, documents, soapNotes, noMR, dob, personalData, illnessDiagnosis} = useAuth();
   const [currentDayAndDate, setCurrentDayAndDate] = useState<string>('');
   const [patientList, setPatientList] = useState<{
     pname: string,
@@ -204,13 +219,7 @@ const PatientPage: React.FC = () => {
     changedBy: string,
     hospital: string,
   }>();  
-  const [documentData, setDocumentData] = useState<{
-    id: number,
-    name: string,
-    size: string,
-    type: string,
-    date: Date,
-  }[]>([]);
+  const [documentData, setDocumentData] = useState<Document[]>([]);
 
   const handleSeeEMR = (appoid: number, walkin: boolean) => {
     // Show the dialog when "See EMR" is clicked
@@ -218,6 +227,58 @@ const PatientPage: React.FC = () => {
     setAppoId(appoid);
     setWalkin(walkin);
     getToken();
+  };
+
+  const [filesWithPreviews, setFilesWithPreviews] = useState<FileWithPreview[]>([]);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const fileList = event.target.files;
+    if (!fileList) return;
+
+    const filesArray = Array.from(fileList);
+    filesArray.forEach((file) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onloadend = () => {
+        setFilesWithPreviews((prev) => [
+          ...prev,
+          { file, dataUrl: reader.result as string },
+        ]);
+      };
+    });
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setFilesWithPreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const submitFilesToStorage = async (filesWithPreviews: FileWithPreview[]): Promise<Document[]> => {
+    try {
+      const downloadURLs = await uploadFiles(noMR, appoid, filesWithPreviews);
+      const documents = await Promise.all(
+        filesWithPreviews.map(async ({ file }) => {
+          const matchingDownload = downloadURLs.find((val) => val.filename === file.name);
+      
+          if (matchingDownload) {
+            return {
+              appointmentid: appoid,
+              filename: file.name,
+              filesize: file.size,
+              filetype: file.type,
+              date: new Date(),
+              fileUrl: matchingDownload.fileUrl,
+            };
+          }
+          return undefined;
+        })
+      );
+
+      setDocumentData(documents.filter((doc) => doc !== undefined) as Document[])
+      return documents.filter((doc) => doc !== undefined) as Document[];
+    } catch (error) {
+      console.error('Error submitting files:', error);
+      throw error;
+    }
   };
 
   const handleCancel = () => {
@@ -415,12 +476,13 @@ const PatientPage: React.FC = () => {
   
   const fetchLatestUpdate = async (patientId: number) => {
     try {
+      console.log(patientId)
+      console.log(walkin)
       const response = await axios.get(`http://localhost:3000/emr/doctor/latest-update/${patientId}/${walkin}`)
 
       const data = await JSON.parse(decrypt(response.data));
       console.log('latest update', data);
       setLatestUpdate(data);
-      setDocumentData([]);
       setIsBloodPressureNormal(true);
       setIsHbLow(true);
       setIsHeartLow(true);
@@ -486,6 +548,8 @@ illnessDiagnosis
   const handleSubmitSOAP = async () => {
     try {
       setIsLoadingSubmit(true);
+      const documents = await submitFilesToStorage(filesWithPreviews);
+      console.log(documents);
       const personalDetails = {
         id: patientId,
         fullName: personalData?.fullName,
@@ -519,6 +583,7 @@ illnessDiagnosis
           appointmentid: appoid,
         },
         doctorPrescriptions: prescriptions,
+        documents: documents,
       }));
       console.log({
         previousEmr: emr,
@@ -536,7 +601,10 @@ illnessDiagnosis
           appointmentid: appoid,
         },
         doctorPrescriptions: prescriptions,
+        documents: documents,
       })
+      
+      setIsLoadingSubmit(false);
       const response = await axios.post('http://localhost:3000/emr/soap', { data: encryptedData });
       if (response.data == 'No authorization')
       {
@@ -557,6 +625,7 @@ illnessDiagnosis
         setPlanning('');
         setAssessment('');
         setPrescriptions([]);
+        setFilesWithPreviews([]);
         setIllnessDiagnoses(null);
         setIsLoadingSubmit(false);
         setSubmitSOAP(false);
@@ -568,7 +637,7 @@ illnessDiagnosis
     
   };
 
-  const isSubmitSoapDisabled = !weight || !height || !sistolik || !diastolik || !heartRate || !glucoseLevel || !hemoglobin || !subjective || !objective || !planning || !assessment || !illnessDiagnoses || prescriptions.length == 0;
+  const isSubmitSoapDisabled = !weight || !height || !sistolik || !diastolik || !heartRate || !glucoseLevel || !hemoglobin || !subjective || !objective || !planning || !assessment || !illnessDiagnoses
 
   return (
       <div className="flex min-h-screen">
@@ -699,6 +768,27 @@ illnessDiagnosis
                       </div>
                     ))}
                   </div>
+
+                  {/* File Upload Section */}
+                  <h4 className="h4 mb-8 text-gray-800">Document</h4>
+                    <div className="mt-4">
+                      {documents.map((doc, index) => (
+                        <div className="flex items-center mt-4 max-w-4xl" key={index}>
+                          {doc.filetype === 'application/pdf' ? (
+                            <iframe
+                              src={doc.fileUrl}
+                              frameBorder="0"
+                              scrolling="no"
+                              width="100%"
+                              height="500px"
+                            ></iframe>
+                          ) : (
+                            <img src={doc.fileUrl} alt={doc.filename} style={{ width: '100px' }} />
+                          )}
+                          <h4 className="ml-4">{doc.filename}</h4>
+                        </div>
+                      ))}
+                    </div>
                 </div>
               </div>
             </div>
@@ -895,7 +985,36 @@ illnessDiagnosis
                         Add Prescription
                       </button>
                     </div>
-                    <div>
+
+                    {/* File Upload Section */}
+                    <h4 className="h4 mb-8 text-gray-800">Document</h4>
+                    <div className="mt-4">
+                      {filesWithPreviews.map((fileWithPreview, index) => (
+                        <div className="flex items-center mt-4 max-w-4xl" key={index}>
+                          {fileWithPreview.file.type === 'application/pdf' ? (
+                            <iframe
+                              src={fileWithPreview.dataUrl}
+                              frameBorder="0"
+                              scrolling="no"
+                              width="100%"
+                              height="500px"
+                            ></iframe>
+                          ) : (
+                            <img src={fileWithPreview.dataUrl} alt={fileWithPreview.file.name} style={{ width: '100px' }} />
+                          )}
+                          <h4 className="ml-4">{fileWithPreview.file.name}</h4>
+                          <button className="m-4 bg-blue-900 rounded text-white p-2" type="button" onClick={() => handleRemoveFile(index)}>Remove</button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-8">
+                      <div className="border p-4 rounded border-gray-600 w-2/3">
+                        <input type="file" multiple onChange={handleFileChange} />
+                      </div>
+                    </div>
+
+
+                    <div className="my-8">
                       <button onClick={handleSubmitSOAP} disabled={isLoadingSubmit || isSubmitSoapDisabled} className={`w-auto bg-blue-900 text-white text-[24px] px-4 py-2 rounded
                       ${isLoadingSubmit || isSubmitSoapDisabled ? 'bg-gray-500' : '' }`}>
                         Submit SOAP
@@ -1058,7 +1177,7 @@ illnessDiagnosis
                         </div>
                   </div>
                   <div className="grid grid-cols-2 ml-8">
-                    <div className="col-span-1 row-span-1 mt-5 border px-5 pt-4 mr-4 bg-white rounded-[10px]">
+                    <div className="col-span-1 row-span-1 mt-5 border px-5 py-4 mr-4 bg-white rounded-[10px]">
                         <div>
                           <h5 className="h5 font-semibold">Illness Diagnosis</h5>
                           <div className="grid grid-cols-2 grid-rows-2 mt-2">
@@ -1091,17 +1210,18 @@ illnessDiagnosis
                           </div>
                         </div>
                       </div>
-                    <div className="col-span-1 row-span-1 mt-5 border px-5 py-4 mr-4 my-auto bg-white rounded-[10px]">
+                    <div className="col-span-1 row-span-1 mt-5 border px-5 py-4 mr-4 bg-white rounded-[10px]">
                       <div>
                         <h5 className="h5 font-semibold mb-1">Documents</h5>
-                        {documentData.length > 0 ? (
+                        {documents.length > 0 ? (
                           <div className="grid grid-cols-2">
-                            {documentData
+                            {documents
                             .map((doc, index) => (
                               <div key={index} className="mt-2 mr-4 px-2 py-1 border rounded-[8px]">
-                                <h5 className="text-blue-500 font-semibold text-[12px]">{doc.name}{doc.type}</h5>
-                                <h5 className="text-left font-semibold text-gray-400 text-[10px]">{doc.size} </h5>
-                                <CgSoftwareDownload className="h-4 w-5 ml-20 hover:cursor-pointer"/>
+                                <h5 className="text-blue-500 font-semibold text-[12px]">{doc.filename}</h5>
+                                <h5 className="text-left font-semibold text-gray-400 text-[10px]">{doc.filetype} </h5>
+                                <CgSoftwareDownload className="h-4 w-5 ml-28 hover:cursor-pointer"
+                                />
                               </div>
                             ))}
                           </div>

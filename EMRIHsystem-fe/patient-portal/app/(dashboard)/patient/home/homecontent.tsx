@@ -9,7 +9,7 @@ import HeartRateImage from '@/public/images/heart-rate.jpg';
 import GlucoseLevelImage from '@/public/images/glucose-level.jpg';
 import { CgSoftwareDownload } from "react-icons/cg";
 import { useAuth } from "@/app/(auth)/AuthContext";
-import { IoMdArrowDropup, IoMdArrowDropdown, IoIosNotificationsOutline, IoIosArrowForward  } from "react-icons/io";
+import { IoMdArrowDropup, IoMdArrowDropdown, IoIosNotificationsOutline  } from "react-icons/io";
 import { FaRegSmileBeam } from "react-icons/fa";
 import Link from "next/link";
 import axios from "axios";
@@ -62,10 +62,18 @@ interface HistoryIllnessDiagnosis {
   treatment: string;
 }
 
+interface Document {
+  appointmentid: number,
+  filename: string,
+  filesize: number,
+  filetype: string,
+  date: Date,
+  fileUrl: string,
+}
 
 // const Homepage: React.FC<{ patientData: PatientData }> = ({ patientData }) => {
 const HomeContentPage: React.FC = () => {
-  const {patientData, noMR, dob, appointmentHistory, accessToken, personalData, illnessDiagnosis, soapNotes, setMenu} = useAuth();
+  const {patientData, noMR, dob, appointmentHistory, accessToken, personalData, illnessDiagnosis, documents, soapNotes, setMenu} = useAuth();
   const [isHeartRateLow, setIsHeartLow] = useState(false);
   const [isHeartRateNormal, setIHeartRateNormal] = useState(false);
   const [isHbLow, setIsHbLow] = useState(false);
@@ -76,6 +84,7 @@ const HomeContentPage: React.FC = () => {
   const [isGlucoseNormal, setIsGlucoseNormal] = useState(false);
   const [isOpenHistorySOAP, setOpenHistory] = useState(false);  
   const [historyPrescriptions, setHistoryPrescriptions] = useState<Prescription[]>([]);
+  const [historyDocuments, setHistoryDocuments] = useState<Document[]>([]);
   const [historyDiagnose, setHistoryDiagnose] = useState<HistoryIllnessDiagnosis | null>(null);
   const [historyPersonalData, setHistoryPersonalData] = useState<PersonalData | null>(null);
   const [historyAppoid, setHistoryAppoId] = useState(0);
@@ -83,13 +92,6 @@ const HomeContentPage: React.FC = () => {
   const [historyDoctor, setHistoryDoctor] = useState('');
   const [historyHospital, setHistoryHospital] = useState('');
   const [historySOAP, setHistorySOAP] = useState<SOAPNotes | null>(null);
-  const [documentData, setDocumentData] = useState<{
-    id: number,
-    name: string,
-    size: string,
-    type: string,
-    date: Date,
-  }[]>([]);
   const [notifications, setNotification] = useState<{
     id: number,
     message: string,
@@ -106,39 +108,14 @@ const HomeContentPage: React.FC = () => {
 
   const [age, setAge] = useState('0 Tahun');
 
-  const documentDetails = [
-    {
-      id: 1,
-      name: 'Blood Status',
-      size: '1 MB',
-      type: '.pdf',
-      date: new Date(),
-    },
-    {
-      id: 2,
-      name: 'Heart Rate',
-      size: '1 MB',
-      type: '.pdf',
-      date: new Date(),
-
-    },
-    {
-      id: 3,
-      name: 'Lab Radiology',
-      size: '2 MB',
-      type: '.jpg',
-      date: new Date(),
-
-    },
-    {
-      id: 4,
-      name: 'Lab Fisiotherapy',
-      size: '1 MB',
-      type: '.pdf',
-      date: (new Date(-1)),
-
-    },
-  ]
+  const handleDownloadClick = (doc: Document) => {
+    const downloadLink = document.createElement('a');
+    downloadLink.href = doc.fileUrl;
+    console.log(doc.fileUrl);
+    downloadLink.download = doc.filename;
+    downloadLink.target = '_blank';
+    downloadLink.click();
+  };
 
   const handleCloseHistory = async () => {
     setHistoryAppoId(0)
@@ -148,6 +125,7 @@ const HomeContentPage: React.FC = () => {
     setHistoryPersonalData(null);
     setHistoryDiagnose(null);
     setHistorySOAP(null);
+    setHistoryDocuments([]);
     setHistoryPrescriptions([]);
     setOpenHistory(false);
   };
@@ -183,13 +161,14 @@ const HomeContentPage: React.FC = () => {
     setHistoryDiagnose(latestSOAP.illnessDiagnosis);
     setHistorySOAP(latestSoapNote);
     setHistoryPrescriptions(latestSOAP.doctorPrescriptions);
+    setHistoryDocuments(latestSOAP.documents);
 
     setOpenHistory(true);
   }
 
   useEffect(() => {
     
-  },[personalData, latestUpdate, appointmentHistory, illnessDiagnosis, soapNotes, historyPersonalData, historyDiagnose, historySOAP, historyPrescriptions, historySession, historyAppoid, historyDoctor, historyHospital])
+  },[personalData, latestUpdate, appointmentHistory, illnessDiagnosis, soapNotes, historyPersonalData, historyDiagnose, historySOAP, historyDocuments, historyPrescriptions, historySession, historyAppoid, historyDoctor, historyHospital])
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -223,7 +202,6 @@ const HomeContentPage: React.FC = () => {
 
     fetchNotifications();
     fetchLatestUpdate();
-    setDocumentData(documentDetails);
     setIsBloodPressureNormal(true);
     setIsHbLow(true);
     setIsHeartLow(true);
@@ -376,6 +354,33 @@ const HomeContentPage: React.FC = () => {
                       </div>
                     ))}
                   </div>
+
+                  {/* File Upload Section */}
+                  <h4 className="h4 my-8 text-gray-800">Document</h4>
+                  { historyDocuments.length > 0 ? (
+                    <div className="mt-4">
+                      {historyDocuments.map((doc, index) => (
+                        <div className="flex items-center mt-4 max-w-4xl" key={index}>
+                          {doc.filetype === 'application/pdf' ? (
+                            <iframe
+                              src={doc.fileUrl}
+                              frameBorder="0"
+                              scrolling="no"
+                              width="100%"
+                              height="500px"
+                            ></iframe>
+                          ) : (
+                            <img src={doc.fileUrl} alt={doc.filename} style={{ width: '100px' }} />
+                          )}
+                          <h4 className="ml-4">{doc.filename}</h4>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="border w-2/3 border-gray-600">
+                    <EmptyTableData/>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -526,7 +531,7 @@ const HomeContentPage: React.FC = () => {
                   <div className="col-span-1 row-span-1 mt-5 border px-5 py-2 mr-4  bg-white rounded-[10px]">
                       <div>
                         <h5 className="h5 font-semibold">Illness Diagnosis</h5>
-                        <div className="grid grid-cols-2 grid-rows-2 mt-4 text-[14px]">
+                        <div className="grid grid-cols-2 grid-rows-2 my-4 text-[14px]">
                           {illnessDiagnosis && (
                             <>
                             <div className="col-span-2 row-span-1">
@@ -554,21 +559,33 @@ const HomeContentPage: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                  <div className="col-span-1 row-span-1 mt-5 border px-5 py-2 mr-4 my-auto bg-white rounded-[10px]">
+                  <div className="col-span-1 row-span-1 mt-5 border px-5 py-2 mr-4 bg-white rounded-[10px]">
                     <div>
                       <h5 className="h5 font-semibold mb-1">Documents</h5>
-                      {documentData.length > 0 && (
+                      {documents.length > 0 ? (
                         <div className="grid grid-cols-2 pb-3">
-                          {documentData
+                          {documents
                           .map((doc, index) => (
                             <div key={index} className="mt-2 mr-4 px-2 py-1 border rounded-[8px]">
-                              <h5 className="text-blue-500 font-semibold text-[12px]">{doc.name}{doc.type}</h5>
-                              <h5 className="text-left font-semibold text-gray-400 text-[10px]">{doc.size} </h5>
-                              <CgSoftwareDownload className="h-4 w-5 ml-20 hover:cursor-pointer"/>
+                              <h5 className="text-blue-500 font-semibold text-[12px]">{doc.filename}</h5>
+                              <h5 className="text-left font-semibold text-gray-400 text-[10px]">{doc.filetype} </h5>
+                              <CgSoftwareDownload className="h-4 w-5 ml-20 hover:cursor-pointer"
+                              onClick={() => handleDownloadClick(doc)}
+                              />
                             </div>
                           ))}
                         </div>
-                        )}
+                        ) : (
+                          <EmptyTableData/>
+                      )}
+
+                      {/* {selectedFile && (
+                        <div>
+                          <h2>{selectedFile.filename}</h2>
+                          <p>File content: {selectedFile.content}</p>
+                          Add additional rendering logic based on your file type
+                        </div>
+                      )} */}
                     </div>
                   </div>
                 </div>

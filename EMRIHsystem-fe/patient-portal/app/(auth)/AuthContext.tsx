@@ -1,6 +1,7 @@
 'use client';
 
 import axios from 'axios';
+import { getAuth, signOut } from 'firebase/auth';
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 
 interface AdminData {
@@ -55,12 +56,12 @@ interface PersonalData {
 }
 
 interface Document {
-  name: string;
-  timestamp: Date;
-  documentType: string;
-  description: string;
-  appointmentId: number;
-  url: string;
+  appointmentid: number,
+  filename: string,
+  filesize: number,
+  filetype: string,
+  date: Date,
+  fileUrl: string,
 }
 
 interface IllnessDiagnosis {

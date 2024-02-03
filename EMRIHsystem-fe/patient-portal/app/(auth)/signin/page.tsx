@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useAuth } from '../AuthContext';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import LogoImage from '@/public/images/logo.png';
 import Homepage from '@/app/(dashboard)/patient/home/page';
 import { isPasswordValid } from '@/public/common/hashedpassword';

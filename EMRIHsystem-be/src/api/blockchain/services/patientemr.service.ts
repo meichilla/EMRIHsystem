@@ -53,12 +53,12 @@ interface Prescription {
 }
 
 interface Document {
-  name: string;
-  timestamp: Date;
-  documentType: string;
-  description: string;
-  appointmentId: number;
-  url: string;
+  appointmentid: number;
+  filename: string;
+  filesize: number;
+  filetype: string;
+  date: Date;
+  fileUrl: string;
 }
 
 interface AppointmentHistory {
@@ -1075,6 +1075,7 @@ export class PatientEMRService {
       const doctorPrescriptions: Prescription[] =
         dataDetails['doctorPrescriptions'];
       const soapNotes = dataDetails['soapNotes'];
+      const documents = dataDetails['documents'];
       const walkin = dataDetails['walkin'];
       const pid = parseInt(dataDetails['pid'], 10);
       const doctorId = parseInt(dataDetails['doctorId'], 10);
@@ -1173,7 +1174,20 @@ export class PatientEMRService {
       const patientAdditions: Prescription[] =
         previousEmr.prescription.patientAdditions || [];
 
-      const documents: Document[] = previousEmr.documents || [];
+      const docs: Document[] = previousEmr.documents || [];
+
+      const add_document = documents.map((value) => {
+        const new_doc: Document = {
+          appointmentid: appointment.appoid,
+          filename: value.filename,
+          filesize: value.filesize,
+          filetype: value.filetype,
+          date: value.date,
+          fileUrl: value.fileUrl,
+        };
+        return new_doc;
+      });
+      docs.push(...add_document);
 
       const appointmentHistory: AppointmentHistory[] =
         previousEmr.appointmentHistory || [];
@@ -1221,7 +1235,7 @@ export class PatientEMRService {
           patientAdditions: patientAdditions,
         },
         appointmentHistory: appointmentHistory,
-        documents: documents,
+        documents: docs,
       });
 
       console.log('medRec', medRec);
@@ -1307,7 +1321,7 @@ export class PatientEMRService {
 
   async getLatestUpdate(pid: number, walkin: boolean) {
     let patient;
-    if (walkin === true) {
+    if (walkin) {
       patient = await this.walkinPatientRepository.findOne({
         pid: pid,
       });
@@ -1474,6 +1488,7 @@ export class PatientEMRService {
     const soap = await JSON.parse(changes.value);
     const medicalRecord = soap['medicalRecord'];
     const soapNotes = medicalRecord['soapNotes'];
+    const documents = soap['documents'];
     let illnessDiagnosis = medicalRecord['illnessDiagnosis'];
     if (!illnessDiagnosis) {
       const illness_Diagnosis = medicalRecord['ilnessDiagnosis'];
@@ -1487,21 +1502,17 @@ export class PatientEMRService {
       };
     }
 
-    console.log(soap.prescription.doctorPrescriptions);
-    console.log(appointmentId);
-
     const filteredDoctorPrescriptions =
       soap.prescription.doctorPrescriptions.filter(
         (prescription) => prescription.appointmentId == appointmentId,
       );
-
-    console.log(filteredDoctorPrescriptions);
 
     return {
       personalData: soap.personalData,
       soapNotes: soapNotes,
       illnessDiagnosis: illnessDiagnosis,
       doctorPrescriptions: filteredDoctorPrescriptions,
+      documents: documents,
     };
   }
 }

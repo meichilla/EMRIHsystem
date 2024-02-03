@@ -8,6 +8,8 @@ import MySessionPage from '@/app/(dashboard)/doctor/session/page';
 import { isPasswordValid } from '@/public/common/hashedpassword';
 import { decrypt, encrypt } from '@/components/utils/crypto';
 import axios from 'axios';
+import { auth, db, storage } from '@/components/utils/firebase';
+import { signInAnonymously, signInWithEmailAndPassword } from 'firebase/auth';
 
 interface DoctorData {
   docid: number;

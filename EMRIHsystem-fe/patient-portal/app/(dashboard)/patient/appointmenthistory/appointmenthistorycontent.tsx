@@ -6,6 +6,7 @@ import EmptyTable from "./empty_table";
 import axios from "axios";
 import { decrypt } from "@/components/utils/crypto";
 import { IoArrowBackCircleOutline } from "react-icons/io5";
+import EmptyTableData from "../../doctor/patient/empty_table_data";
 
 interface PersonalData {
   id: number;
@@ -61,6 +62,15 @@ interface AppointmentHistory {
   status: string;
 }
 
+interface Document {
+  appointmentid: number,
+  filename: string,
+  filesize: number,
+  filetype: string,
+  date: Date,
+  fileUrl: string,
+}
+
 const AppointmentHistoryPage: React.FC = () => {
   const { hospital, accessToken, patientData, personalData, appointmentHistory, noMR } = useAuth();
   const hospitalId = hospital?.id
@@ -68,6 +78,7 @@ const AppointmentHistoryPage: React.FC = () => {
   const [searchKey, setSearchKey] = useState('');
   const [isOpenHistorySOAP, setOpenHistory] = useState(false);  
   const [historyPrescriptions, setHistoryPrescriptions] = useState<Prescription[]>([]);
+  const [historyDocuments, setHistoryDocuments] = useState<Document[]>([]);
   const [historyDiagnose, setHistoryDiagnose] = useState<HistoryIllnessDiagnosis | null>(null);
   const [historyPersonalData, setHistoryPersonalData] = useState<PersonalData | null>(null);
   const [historyAppoid, setHistoryAppoId] = useState(0);
@@ -110,6 +121,7 @@ const AppointmentHistoryPage: React.FC = () => {
     setHistoryPersonalData(null);
     setHistoryDiagnose(null);
     setHistorySOAP(null);
+    setHistoryDocuments([]);
     setHistoryPrescriptions([]);
     setOpenHistory(false);
   };
@@ -145,6 +157,7 @@ const AppointmentHistoryPage: React.FC = () => {
     setHistoryDiagnose(latestSOAP.illnessDiagnosis);
     setHistorySOAP(latestSoapNote);
     setHistoryPrescriptions(latestSOAP.doctorPrescriptions);
+    setHistoryDocuments(latestSOAP.documents);
 
     setOpenHistory(true);
   }
@@ -300,6 +313,33 @@ const AppointmentHistoryPage: React.FC = () => {
                       </div>
                     ))}
                   </div>
+
+
+                  <h4 className="h4 my-8 text-gray-800">Document</h4>
+                  { historyDocuments.length > 0 ? (
+                    <div className="mt-4">
+                      {historyDocuments.map((doc, index) => (
+                        <div className="flex items-center mt-4 max-w-4xl" key={index}>
+                          {doc.filetype === 'application/pdf' ? (
+                            <iframe
+                              src={doc.fileUrl}
+                              frameBorder="0"
+                              scrolling="no"
+                              width="100%"
+                              height="500px"
+                            ></iframe>
+                          ) : (
+                            <img src={doc.fileUrl} alt={doc.filename} style={{ width: '100px' }} />
+                          )}
+                          <h4 className="ml-4">{doc.filename}</h4>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="border w-2/3 border-gray-600">
+                    <EmptyTableData/>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
