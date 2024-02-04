@@ -5,14 +5,10 @@ import { useAuth } from '@/app/(auth)/AuthContext';
 import PatientImage from '@/public/images/patient.png';
 import HomeImage from '@/public/images/home.svg';
 import DoctorImage from '@/public/images/doctor.svg';
-import CalendarImage from '@/public/images/calendar.svg';
-import SessionImage from '@/public/images/calendar.png';
 import SettingImage from '@/public/images/setting.svg';
-import EmrImage from '@/public/images/emr.png';
 import LogoImage from '@/public/images/logo.png';
 import { IoIosNotificationsOutline } from "react-icons/io";
 import { MdHistoryEdu } from "react-icons/md";
-import { GrDatabase } from "react-icons/gr";
 import { FaPrescriptionBottleMedical } from "react-icons/fa6";
 import { IoDocumentAttachOutline } from "react-icons/io5";
 import { FaRegCalendarAlt } from 'react-icons/fa';
@@ -68,7 +64,7 @@ const Menu = () => {
               height={32}
               className="w-8 h-8"
             />
-            <div className="ml-2">dApp|</div>
+            <div className="mx-2">EMR-IH | </div>
             <div className="left-0 mt-1 text-sm text-blue-500">Patient Portal</div>
           </div>
         </Link>
@@ -118,7 +114,7 @@ const Menu = () => {
                     <Link className={`flex items-center py-2 px-4 font-semibold
                       ${ selectedMenu === 2 ? 'text-blue-900 underline' : 'hover:bg-gray-200 hover:text-blue-900'}
                       `}
-                       href="#"
+                       href="/patient/document"
                        onClick={() => setMenu(2)}>
                       <IoDocumentAttachOutline  className="w-6 h-8 mr-4"/>
                         Documents

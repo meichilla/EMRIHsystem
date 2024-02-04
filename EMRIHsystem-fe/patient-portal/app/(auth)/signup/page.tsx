@@ -1,16 +1,14 @@
 'use client'
-// export const metadata = {
-//   title: 'Sign Up - dAppointment',
-//   description: 'Page description',
-// }
 
 import Link from 'next/link'
 import { useState } from 'react';
-import { AuthProvider, useAuth } from '../AuthContext';
+import { AuthProvider } from '../AuthContext';
 import LogoImage from '@/public/images/logo.png';
+import { hashPassword } from '@/public/common/hashedpassword';
+import axios from 'axios';
+import { encrypt } from '@/components/utils/crypto';
 
 const SignUp = () => {
-  const { login } = useAuth();
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
   const [dob, setDob] = useState('');
@@ -19,10 +17,11 @@ const SignUp = () => {
   const [address, setAddress] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [nonce, setNonce] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordMatch, setPasswordMatch] = useState(true);
   const [walletAddress, setWalletAddress] = useState('');
+  const [pk, setPK] = useState('');
+  const [gender, setGender] = useState('');
   const [patientExist, setPatientExist] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isRegisteredSuccessfuly, setSuccessRegister] = useState(false);
@@ -39,8 +38,6 @@ const SignUp = () => {
     setSuccessRegister(false);
     setLoading(true);
     const fullName = `${name} ${surname}`;
-
-    console.log("NIC", nic);
     // Check if the patient already exists
     const patientExists = await checkPatientExistence(nic);
     console.log("Patient Exists : ", patientExists);
@@ -50,35 +47,38 @@ const SignUp = () => {
       return;
     }
 
-    const normalizedNIC = nic.toLowerCase();
-    // Make a request to your NestJS API to register the patient
-    const response = await fetch('http://localhost:3000/patients/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    try {
+      const normalizedNIC = nic.toLowerCase();
+      const hashedPassword = await hashPassword(password);
+      const encryptedData = encrypt(
+        JSON.stringify({
         name: fullName,
         homeAddress: address,
         dob: dob,
         email: email,
         telephone: phoneNumber,
-        password: password,
+        password: hashedPassword,
         nic: normalizedNIC,
         walletAddress: walletAddress,
-        // nonce: nonce,
-      }),
-    });
-
-    if (response.ok) {
-      console.log('Patient registered successfully!');
-      setSuccessRegister(true);
-      setLoading(false);
-      login();
-    } else {
-      console.error('Error registering patient:', await response.text());
+        pk: pk,
+        gender: gender,
+      }));
+      const response = await axios.post('http://localhost:3000/patients/register', { data: encryptedData });
+      const data = await response.data;
+      if (data === 'Patient registered successfully')
+      {
+        setSuccessRegister(true);
+        setLoading(false);
+      }
+      else
+      {  
+        setLoading(false);
+        setRegisterFailed(false);
+      }
+    } catch (error: any) {
       setLoading(false);
       setRegisterFailed(false);
+      console.error('Error registering patient :', error);
     }
   };
 
@@ -92,16 +92,14 @@ const SignUp = () => {
     setConfirmPassword(e.target.value);
     setPasswordMatch(true);
   };
-  
-  const checkPatientExistence = async (nic: string) => {
+
+  const checkPatientExistence = async (nic: string) => {  
     try {
-      const response = await fetch(`http://localhost:3000/patients/isRegistered/${nic}`);
-      
-      if (!response.ok) {
-        throw new Error(`Error: ${response.statusText}`);
-      }
-  
-      const data = await response.json();
+      const normalizedNIC = nic.toLowerCase();
+      const encryptedData = encrypt(JSON.stringify(normalizedNIC));
+
+      const response = await axios.post('http://localhost:3000/patients/isRegistered', { data: encryptedData });
+      const data = await response.data;
       setPatientExist(data);
       return data;
     } catch (error: any) {
@@ -110,6 +108,24 @@ const SignUp = () => {
       console.error('Check patient existence error:', error);
       throw new Error(`Failed to check patient existence: ${error.message}`);
     }
+  };
+
+  const handleInputChangePhoneNumber = (e: { target: { value: any; }; }) => {
+    let value = e.target.value;
+
+    // Remove any characters that are not digits
+    const cleanedValue = value.replace(/\D/g, '');
+
+    // Check if the value starts with a '+'
+    if (value.startsWith('+')) {
+      // If it starts with '+', keep the '+' and add the cleaned digits
+      value = '+' + cleanedValue;
+    } else {
+      // If it doesn't start with '+', just use the cleaned digits
+      value = cleanedValue;
+    }
+
+    setPhoneNumber(value);
   };
 
   return (
@@ -125,16 +141,16 @@ const SignUp = () => {
                   height={32}
                   className="w-8 h-8"
                 />
-                <div className="ml-2">ezAppointment|</div>
-                <div className="left-0 mt-1 text-sm text-blue-500">Hospital</div>
+                <div className="mx-2">EMR-IH | </div>
+                <div className="left-0 mt-1 text-sm text-blue-500">Patient Portal</div>
               </div>
             </Link>
           <div className="pt-16 pb-12 md:pt-8 md:pb-20">
 
             {/* Page header */}
             <div className="max-w-3xl mx-auto text-center pb-12 md:pb-8">
-              <h2 className="h2">Welcome, please register.</h2>
-              <h6 className="h3">We exist to make your online booking easier.</h6>
+              {/* <h2 className="h2">Welcome, please register.</h2> */}
+              <h6 className="h3">Create Your EMR-IH Account.</h6>
             </div>
 
             {/* Form */}
@@ -162,6 +178,35 @@ const SignUp = () => {
                   </div>
                 </div>
                 <div className="flex flex-wrap -mx-3 mb-4">
+                <div className="w-full px-3">
+                  <label className="block text-gray-800 text-sm font-medium mb-1">Gender<span className="text-red-600">*</span></label>
+                  <div className="flex items-center space-x-4 mt-2">
+                    <label className="inline-flex items-center">
+                      <input
+                        type="radio"
+                        className="form-radio"
+                        value="Male"
+                        checked={gender === 'Male'}
+                        onChange={() => setGender('Male')}
+                        disabled={loading}
+                      />
+                      <span className="ml-2">Male</span>
+                    </label>
+                    <label className="inline-flex items-center">
+                      <input
+                        type="radio"
+                        className="form-radio"
+                        value="Female"
+                        checked={gender === 'Female'}
+                        onChange={() => setGender('Female')}
+                        disabled={loading}
+                      />
+                      <span className="ml-2">Female</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+                <div className="flex flex-wrap -mx-3 mb-4">
                   <div className="w-full px-3">
                     <label className="block text-gray-800 text-sm font-medium mb-1" htmlFor="nic">NIC <span className="text-red-600">*</span></label>
                     <input disabled={loading} id="nic" type="text" className="form-input w-full text-gray-800" placeholder="Enter your nic" onChange={(e) => setNic(e.target.value)}
@@ -171,7 +216,8 @@ const SignUp = () => {
                 <div className="flex flex-wrap -mx-3 mb-4">
                   <div className="w-full px-3">
                     <label className="block text-gray-800 text-sm font-medium mb-1" htmlFor="phoneNumber">Phone Number <span className="text-red-600">*</span></label>
-                    <input disabled={loading} id="phoneNumber" type="text" className="form-input w-full text-gray-800" placeholder="Enter your phone number" onChange={(e) => setPhoneNumber(e.target.value)}
+                    <input disabled={loading} id="phoneNumber" type="text" className="form-input w-full text-gray-800" placeholder="Enter your phone number" 
+                    onChange={(e) => handleInputChangePhoneNumber(e)}
                     value={phoneNumber} required />
                   </div>
                 </div>
@@ -192,17 +238,17 @@ const SignUp = () => {
                 <div className="flex flex-wrap -mx-3 mb-4">
                 <div className="w-full px-3">
                   <label className="block text-gray-800 text-sm font-medium mb-1" htmlFor="walletAddress">Wallet Address <span className="text-red-600">*</span></label>
-                  <input disabled={loading} id="walletAddress" type="text" className="form-input w-full text-gray-800" placeholder="Enter your ether wallet address" onChange={(e) => setWalletAddress(e.target.value)} 
+                  <input disabled={loading} id="walletAddress" type="password" className="form-input w-full text-gray-800" placeholder="Enter your ether wallet address" onChange={(e) => setWalletAddress(e.target.value)} 
                   value={walletAddress} required />
                 </div>
                 </div>
-                {/* <div className="flex flex-wrap -mx-3 mb-4">
-                  <div className="w-full px-3">
-                    <label className="block text-gray-800 text-sm font-medium mb-1" htmlFor="nonce">Nonce <span className="text-red-600">*</span></label>
-                    <input id="nonce" type="number" className="form-input w-full text-gray-800" placeholder="Enter your nonce" onChange={(e) => setNonce(e.target.value)}
-                    value={nonce} required />
-                  </div>
-                </div> */}
+                <div className="flex flex-wrap -mx-3 mb-4">
+                <div className="w-full px-3">
+                  <label className="block text-gray-800 text-sm font-medium mb-1" htmlFor="pk">Private Key<span className="text-red-600">*</span></label>
+                  <input disabled={loading} id="pk" type="password" className="form-input w-full text-gray-800" placeholder="Enter your privateKey" onChange={(e) => setPK(e.target.value)} 
+                  value={pk} required />
+                </div>
+                </div>
                 <div className="flex flex-wrap -mx-3 mb-4">
                 <div className="w-full px-3">
                   <label className="block text-gray-800 text-sm font-medium mb-1" htmlFor="password">Password <span className="text-red-600">*</span></label>
@@ -221,9 +267,9 @@ const SignUp = () => {
                   <button className="btn text-white bg-blue-600 hover:bg-blue-700 w-full" disabled={loading}>
                     {loading ? 'Signing up...' : 'Sign up'}
                   </button>
-                  {patientExist && <p className="text-red-600">Patient is already registered</p>}
-                  {isRegisteredSuccessfuly && <p className="text-blue-600">Patient registered successfully! Please Login</p>}
-                  {isRegisterFailed && <p className="text-red-600">Register patient failed, please try again.</p>}
+                  {patientExist && <p className="text-red-600 text-center py-4">Patient is already registered</p>}
+                  {isRegisteredSuccessfuly && <p className="text-blue-600 text-center py-4">Patient registered successfully! Please Sign In</p>}
+                  {isRegisterFailed && <p className="text-red-600 text-center py-4">Register patient failed, please try again.</p>}
                 </div>
               </div>
                 <div className="text-sm text-gray-500 text-center mt-3">
@@ -231,7 +277,7 @@ const SignUp = () => {
                 </div>
               </form>
               <div className="text-gray-600 text-center mt-6">
-                Already have an account? <Link href="/hospital" className="text-blue-600 hover:underline transition duration-150 ease-in-out">Sign in</Link>
+                Already have an account? <Link href="/signin" className="text-blue-600 hover:underline transition duration-150 ease-in-out">Sign in</Link>
               </div>
             </div>
 

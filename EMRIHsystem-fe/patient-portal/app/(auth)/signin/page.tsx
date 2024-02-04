@@ -144,7 +144,7 @@ const SignIn = () => {
                   height={32}
                   className="w-8 h-8"
                 />
-                <div className="ml-2">dApp|</div>
+                <div className="mx-2">EMR-IH | </div>
                 <div className="left-0 mt-1 text-sm text-blue-500">Patient Portal</div>
               </div>
             </Link>
@@ -152,8 +152,8 @@ const SignIn = () => {
                 <div className="pt-16 pb-12 md:pt-8 md:pb-20">
                     {/* Form */}
                     <div className="max-w-3xl mx-auto text-center pb-12 md:pb-2">
-                      <h4 className="h4">Welcome back to Patient Portal</h4>
-                      <p className="mt-24">Please login to see your medical record.</p>
+                      <h4 className="h4">Welcome to EMR-IH Patient Portal</h4>
+                      <p className="mt-24">Please log in to access your patient-centric electronic medical records securely.</p>
                     </div>
 
                     <div className="max-w-sm mx-auto mt-8">

@@ -66,7 +66,7 @@ const Hero = () => {
 
         </div>
         <div className="text-gray-600 text-center mt-32">
-          Don't you have an account? <Link href="//localhost:3001/signup" className="text-blue-600 hover:underline transition duration-150 ease-in-out">Sign up </Link>
+          Don't you have an account? <Link href="/signup" className="text-blue-600 hover:underline transition duration-150 ease-in-out">Sign up </Link>
           | Want to <Link href="//localhost:3001/signin" className="text-blue-600 hover:underline transition duration-150 ease-in-out">make an appointment ?</Link>
         </div>
       </div>
