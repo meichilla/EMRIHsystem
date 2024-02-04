@@ -27,4 +27,12 @@ const uploadFiles = async (noMR: string, appointmentid: number, filesWithPreview
   return downloadURLs;
 };
 
-export { uploadFiles };
+const uploadFileKTP = async (nic: string, filesWithPreviews: FileWithPreview) => {
+  const storageRef = ref(storage, `emrih/idc/${nic}`);
+  const fileRef = ref(storageRef, 'ktp');
+  await uploadBytes(fileRef, filesWithPreviews.file);
+  const downloadURL = await getDownloadURL(fileRef);
+  return downloadURL;
+};
+
+export { uploadFiles, uploadFileKTP };

@@ -35,8 +35,6 @@ const SignIn = () => {
       const response = await axios.post('http://localhost:3000/emr/validate-login', { data: encryptedData });
 
       const resp = await JSON.parse(decrypt(response.data));
-      console.log('access Token', resp.accessToken);
-      console.log('refresh Token', resp.refreshToken);
       await fetchDataEMR(resp.patientDetail, resp.accessToken, resp.refreshToken);
     } catch (error) {
       console.error('Error during login:', error);
@@ -53,12 +51,8 @@ const SignIn = () => {
         },
       });
 
-      console.log(response.headers)
-      console.log(response.request)
-
       const resp = await JSON.parse(decrypt(response.data));
       const data = resp.emr;
-      console.log('data EMR', data);
       let illness_Diagnosis : IllnessDiagnosis | null = data.medicalRecord.medicalRecord.illnessDiagnosis;
       if(!illness_Diagnosis) 
       {
@@ -88,8 +82,8 @@ const SignIn = () => {
         data.medicalRecord.prescription.doctorPrescriptions,
         data.medicalRecord.prescription.patientAdditions,
         );
-        setLoading(false);
-        setLoginError(false);
+      setLoading(false);
+      setLoginError(false);
     } catch (error) {
       console.error('Error during get emr data:', error);
       setLoading(false);

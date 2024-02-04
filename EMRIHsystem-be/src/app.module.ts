@@ -17,6 +17,7 @@ import { MiddlewareConsumer } from '@nestjs/common';
 import { AuthMiddleware } from './middleware/auth.middleware';
 import { NotificationModule } from './api/notifications/notification.module';
 import { RequestMethod } from '@nestjs/common';
+import { KTPModule } from './api/ktp-ocr/ktp.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { RequestMethod } from '@nestjs/common';
     SpecialtiesModule,
     EmrModule,
     NotificationModule,
+    KTPModule,
   ],
   controllers: [AppController],
   providers: [AppService, AuthMiddleware],

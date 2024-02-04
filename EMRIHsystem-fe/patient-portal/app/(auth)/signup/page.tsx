@@ -1,12 +1,27 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react';
+import { ChangeEvent, useState } from 'react';
 import { AuthProvider } from '../AuthContext';
 import LogoImage from '@/public/images/logo.png';
 import { hashPassword } from '@/public/common/hashedpassword';
 import axios from 'axios';
 import { encrypt } from '@/components/utils/crypto';
+import { uploadFileKTP, uploadFiles } from '@/components/utils/filestorage';
+
+type Document = {
+  pnic: string,
+  filename: string,
+  filesize: number,
+  filetype: string,
+  date: Date,
+  fileUrl: string,
+}
+
+type FileWithPreview = {
+  file: File;
+  dataUrl: string;
+};
 
 const SignUp = () => {
   const [name, setName] = useState('');
@@ -24,12 +39,105 @@ const SignUp = () => {
   const [gender, setGender] = useState('');
   const [patientExist, setPatientExist] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isShowKtpOcr, setShowKtpOcr] = useState(false);
   const [isRegisteredSuccessfuly, setSuccessRegister] = useState(false);
   const [isRegisterFailed, setRegisterFailed] = useState(false);
+  const [image, setImage] = useState<string>('');
+  const [result, setResult] = useState<string>('');
+  const [fileWithPreview, setFilesWithPreview] = useState<FileWithPreview | null>(null);
+
+  const handleFileKTPChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files && event.target.files[0];
+    if (file)
+    {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onloadend = () => {
+      setFilesWithPreview(
+        { file, dataUrl: reader.result as string },
+      );
+      };
+    }
+  };
+
+  const [documentData, setDocumentData] = useState<Document | null>(null);
+  const submitFileKTPToStorage = async (): Promise<string> => {
+    try {
+      
+      if(fileWithPreview !== null)
+      {
+        const downloadURL = await uploadFileKTP(nic, fileWithPreview);
+        return downloadURL;
+      }
+      return '';
+    } catch (error) {
+      console.error('Error submitting files:', error);
+      throw error;
+    }
+  };
+
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files && event.target.files[0];
   
+    if (file) {
+      try {
+        const base64String = await readFileAsBase64(file);
+        setImage(base64String);
+      } catch (error) {
+        console.error('Error reading file as base64:', error);
+        setImage('');
+      }
+    }
+  };
+  
+
+// Function to read a file as a base64 string
+const readFileAsBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result.split(',')[1]);
+      } else {
+        reject(new Error('Invalid result type'));
+      }
+    };
+
+    reader.onerror = (error) => {
+      reject(error);
+    };
+
+    reader.readAsDataURL(file);
+  });
+};
+
+  const handleOCR = async () => {
+    if (image) {
+      try {
+
+        const response = await axios.post('http://localhost:3000/ktp/ocr', { image }, {
+          // maxContentLength: 10000000,
+        });
+
+        const data= response.data;
+        const nama = data.name;
+        const nik = data.nik
+        const dob = data.dob
+        if (response.data) {
+          setResult(`${nama} ${nik} ${dob}`);
+        } else {
+          setResult('Error processing OCR');
+        }
+      } catch (error) {
+        console.error(error);
+        setResult('Error processing OCR');
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-        // Check if password and confirmPassword match
     if (password !== confirmPassword) {
       setPasswordMatch(false);
       return;
@@ -48,6 +156,7 @@ const SignUp = () => {
     }
 
     try {
+      const downloadURL = await submitFileKTPToStorage();
       const normalizedNIC = nic.toLowerCase();
       const hashedPassword = await hashPassword(password);
       const encryptedData = encrypt(
@@ -62,6 +171,7 @@ const SignUp = () => {
         walletAddress: walletAddress,
         pk: pk,
         gender: gender,
+        urlKtp: downloadURL,
       }));
       const response = await axios.post('http://localhost:3000/patients/register', { data: encryptedData });
       const data = await response.data;
@@ -69,11 +179,6 @@ const SignUp = () => {
       {
         setSuccessRegister(true);
         setLoading(false);
-      }
-      else
-      {  
-        setLoading(false);
-        setRegisterFailed(false);
       }
     } catch (error: any) {
       setLoading(false);
@@ -154,7 +259,14 @@ const SignUp = () => {
             </div>
 
             {/* Form */}
-            <div className="max-w-sm mx-auto">
+            {isShowKtpOcr ? (
+            <div>
+              <h1>KTP OCR Demo</h1>
+              <input type="file" accept="image/*" onChange={handleFileChange} />
+              <button onClick={handleOCR}>Process OCR</button>
+              {result && <div>OCR Result: {result}</div>}
+            </div>
+            ) : (
               <form onSubmit={handleSubmit}>
               <div className="flex flex-wrap -mx-3 mb-4">
                   <div className="w-full px-3">
@@ -211,6 +323,15 @@ const SignUp = () => {
                     <label className="block text-gray-800 text-sm font-medium mb-1" htmlFor="nic">NIC <span className="text-red-600">*</span></label>
                     <input disabled={loading} id="nic" type="text" className="form-input w-full text-gray-800" placeholder="Enter your nic" onChange={(e) => setNic(e.target.value)}
                     value={nic} required />
+                  </div>
+                </div>
+                <div className="flex flex-wrap -mx-3 mb-4">
+                  <div className="w-full px-3">
+                    <label className="block text-gray-800 text-sm font-medium mb-1" htmlFor="nic">ID Card <span className="text-red-600">*</span></label>
+                    <div className="border p-4 rounded border-gray-300 items-center flex">
+                      <input type="file" onChange={handleFileKTPChange} />
+                      <img src={fileWithPreview?.dataUrl} alt={fileWithPreview?.file.name} style={{ width: '300px' }} />
+                    </div>
                   </div>
                 </div>
                 <div className="flex flex-wrap -mx-3 mb-4">
@@ -276,6 +397,9 @@ const SignUp = () => {
                   By creating an account, you agree to the <a className="underline" href="#0">terms & conditions</a>, and our <a className="underline" href="#0">privacy policy</a>.
                 </div>
               </form>
+            )}
+            <div className="max-w-sm mx-auto">
+              
               <div className="text-gray-600 text-center mt-6">
                 Already have an account? <Link href="/signin" className="text-blue-600 hover:underline transition duration-150 ease-in-out">Sign in</Link>
               </div>

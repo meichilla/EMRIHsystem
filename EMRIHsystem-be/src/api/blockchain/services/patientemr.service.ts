@@ -176,6 +176,7 @@ export class PatientEMRService {
       const walletAddress = dataDetails['walletAddress'];
       const pk = dataDetails['pk'];
       const gender = dataDetails['gender'];
+      const urlKtp = dataDetails['urlKtp'];
 
       const checkPatientExistByNIC = await this.patientRepository.findOne({
         pnic: nic,
@@ -192,15 +193,12 @@ export class PatientEMRService {
           pnic: nic,
         });
 
-      console.log(checkWalkinPatientExistByNIC);
       if (checkWalkinPatientExistByNIC) {
         const pdob = checkWalkinPatientExistByNIC.pdob
           .toISOString()
           .split('T')[0];
         const dobMatch = pdob === dob;
         const nameMatch = checkWalkinPatientExistByNIC.pname === name;
-        console.log(dobMatch);
-        console.log(nameMatch);
 
         if (!dobMatch || !nameMatch)
           return new Error('NIC is already registered');
@@ -225,10 +223,6 @@ export class PatientEMRService {
         noMR = await this.generateNoRekamMedis();
       }
 
-      console.log(noMR);
-
-      const urlKTP = 'http://localhost:3002';
-
       const data = contract.methods
         .registerPatient(
           name,
@@ -241,7 +235,7 @@ export class PatientEMRService {
           walletAddress,
           token,
           noMR,
-          urlKTP,
+          urlKtp,
         )
         .encodeABI();
 
@@ -278,7 +272,7 @@ export class PatientEMRService {
           ptel: telephone,
           pwa: walletAddress,
           token: token,
-          url_ktp: `http:localhost:3002`,
+          url_ktp: urlKtp,
           no_rm: noMR,
           pk: pk,
         };
@@ -646,7 +640,6 @@ export class PatientEMRService {
       });
 
       if (patientExist) {
-        console.log('add emr patient exist', patientExist);
         const contract = await this.getContract();
         const gasPrice = await this.getGasPrice();
         const nonce = await this.getNonce(patientExist.pwa);

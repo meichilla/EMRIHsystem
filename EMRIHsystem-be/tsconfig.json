@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
+    "esModuleInterop": true,
+    "emitDecoratorMetadata": true,
     "resolveJsonModule": true,
     "typeRoots": ["node_modules/@types"],
     "module": "commonjs",
     "declaration": true,
     "removeComments": true,
-    "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "target": "ES2021",
