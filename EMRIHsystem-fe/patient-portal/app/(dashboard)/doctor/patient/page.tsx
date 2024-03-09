@@ -146,6 +146,7 @@ const PatientPage: React.FC = () => {
   const [hemoglobin, setHemoglobin] = useState<string>('');
   const [isAddButtonDisabled, setIsAddButtonDisabled] = useState(true);
   const [historyPrescriptions, setHistoryPrescriptions] = useState<Prescription[]>([]);
+  const [historyDocuments, setHistoryDocuments] = useState<Document[]>([]);
   const [historyDiagnose, setHistoryDiagnose] = useState<HistoryIllnessDiagnosis | null>(null);
   const [historyPersonalData, setHistoryPersonalData] = useState<PersonalData | null>(null);
   const [historySOAP, setHistorySOAP] = useState<SOAPNotes | null>(null);
@@ -297,24 +298,25 @@ const PatientPage: React.FC = () => {
     setHistoryPersonalData(null);
     setHistoryDiagnose(null);
     setHistorySOAP(null);
+    setHistoryDocuments([]);
     setHistoryPrescriptions([]);
     setSubmitSOAP(false);
     setOpenHistory(false);
   };
 
-  const handleOpenHistory = async (appointmendId : number, session: string, doctor: string, hospital: string) => {
-    setHistoryAppoId(appointmendId);
+  const handleOpenHistory = async (appointmentId : number, session: string, doctor: string, hospital: string) => {
+    setHistoryAppoId(appointmentId);
     setHistorySession(session)
     setHistoryDoctor(doctor)
     setHistoryHospital(hospital)
-    const response = await axios.get(`http://localhost:3000/emr/latest-soap/${appointmendId}`)
+    const response = await axios.get(`http://localhost:3000/emr/latest-soap/${appointmentId}`)
 
     const resp = await decrypt(response.data)
     const data = await JSON.parse(resp);
     const latestSOAP = data.result;
     const l_soap = latestSOAP.soapNotes;
     const filteredSOAP: SOAPNotes[] = l_soap.filter(
-      (notes: { appointmentId: number; }) => notes.appointmentId === appointmendId
+      (notes: { appointmentId: number; }) => notes.appointmentId === appointmentId
     );
     
     let latestSoapNote = null;
@@ -323,11 +325,16 @@ const PatientPage: React.FC = () => {
         return latest.timestamp > note.timestamp ? latest : note;
       });
     }
+
+    const documents: Document[] = latestSOAP.documents.filter(
+      (doc: { appointmentid: number; }) => doc.appointmentid === appointmentId
+    );
     
     setHistoryPersonalData(latestSOAP.personalData);
     setHistoryDiagnose(latestSOAP.illnessDiagnosis);
     setHistorySOAP(latestSoapNote);
     setHistoryPrescriptions(latestSOAP.doctorPrescriptions);
+    setHistoryDocuments(documents);
 
     setSubmitSOAP(true);
     setOpenHistory(true);
@@ -335,7 +342,7 @@ const PatientPage: React.FC = () => {
 
   useEffect(() => {
 
-  }, [historyPersonalData, historyDiagnose, historySOAP, historyPrescriptions, historySession, historyAppoid, historyDoctor, historyHospital]);
+  }, [historyPersonalData, historyDiagnose, historySOAP, historyPrescriptions, historyDocuments, historySession, historyAppoid, historyDoctor, historyHospital]);
 
   const handleSubmitToken = async () => {
     // Handle the token submission logic here
@@ -758,6 +765,7 @@ illnessDiagnosis
                   </div>
 
                   <h4 className="h4 mt-12 mb-8 text-gray-800">PRESCRIPTION</h4>
+                  {historyPrescriptions.length > 0 ? (
                   <div className="text-[20px]">
                     {historyPrescriptions?.map((prescription, index) => (
                       <div key={index} className="mb-4 rounded rounded-[10px] border-gray-600 border w-2/3 bg-white shadow-lg p-4">
@@ -768,27 +776,38 @@ illnessDiagnosis
                       </div>
                     ))}
                   </div>
+                  ): (
+                    <div className="border w-2/3 border-gray-600">
+                    <EmptyTableData/>
+                    </div>
+                  )}
 
                   {/* File Upload Section */}
-                  <h4 className="h4 mb-8 text-gray-800">Document</h4>
+                  <h4 className="h4 my-8 text-gray-800">DOCUMENT</h4>
+                  { historyDocuments.length > 0 ? (
                     <div className="mt-4">
-                      {documents.map((doc, index) => (
-                        <div className="flex items-center mt-4 max-w-4xl" key={index}>
-                          {doc.filetype === 'application/pdf' ? (
-                            <iframe
-                              src={doc.fileUrl}
-                              frameBorder="0"
-                              scrolling="no"
-                              width="100%"
-                              height="500px"
-                            ></iframe>
-                          ) : (
-                            <img src={doc.fileUrl} alt={doc.filename} style={{ width: '100px' }} />
-                          )}
-                          <h4 className="ml-4">{doc.filename}</h4>
-                        </div>
-                      ))}
-                    </div>
+                    {historyDocuments.map((doc, index) => (
+                      <div className="flex items-center mt-4 max-w-4xl" key={index}>
+                        {doc.filetype === 'application/pdf' ? (
+                          <iframe
+                            src={doc.fileUrl}
+                            frameBorder="0"
+                            scrolling="no"
+                            width="100%"
+                            height="500px"
+                          ></iframe>
+                        ) : (
+                          <img src={doc.fileUrl} alt={doc.filename} style={{ width: '100px' }} />
+                        )}
+                        <h4 className="ml-4">{doc.filename}</h4>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="border w-2/3 border-gray-600">
+                  <EmptyTableData/>
+                  </div>
+                )}
                 </div>
               </div>
             </div>

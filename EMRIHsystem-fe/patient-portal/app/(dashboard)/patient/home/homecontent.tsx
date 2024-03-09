@@ -130,12 +130,12 @@ const HomeContentPage: React.FC = () => {
     setOpenHistory(false);
   };
 
-  const handleOpenHistory = async (appointmendId : number, session: string, doctor: string, hospital: string) => {
-    setHistoryAppoId(appointmendId);
+  const handleOpenHistory = async (appointmentId : number, session: string, doctor: string, hospital: string) => {
+    setHistoryAppoId(appointmentId);
     setHistorySession(session)
     setHistoryDoctor(doctor)
     setHistoryHospital(hospital)
-    const response = await axios.get(`http://localhost:3000/emr/patient/latest-soap/${appointmendId}`,  {
+    const response = await axios.get(`http://localhost:3000/emr/patient/latest-soap/${appointmentId}`,  {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         },
@@ -147,7 +147,7 @@ const HomeContentPage: React.FC = () => {
     
     const l_soap = latestSOAP.soapNotes;
     const filteredSOAP: SOAPNotes[] = l_soap.filter(
-      (notes: { appointmentId: number; }) => notes.appointmentId === appointmendId
+      (notes: { appointmentId: number; }) => notes.appointmentId === appointmentId
     );
     
     let latestSoapNote = null;
@@ -157,11 +157,15 @@ const HomeContentPage: React.FC = () => {
       });
     }
 
+    const documents: Document[] = latestSOAP.documents.filter(
+      (doc: { appointmentid: number; }) => doc.appointmentid === appointmentId
+    );
+
     setHistoryPersonalData(latestSOAP.personalData);
     setHistoryDiagnose(latestSOAP.illnessDiagnosis);
     setHistorySOAP(latestSoapNote);
     setHistoryPrescriptions(latestSOAP.doctorPrescriptions);
-    setHistoryDocuments(latestSOAP.documents);
+    setHistoryDocuments(documents);
 
     setOpenHistory(true);
   }
@@ -344,16 +348,22 @@ const HomeContentPage: React.FC = () => {
                   </div>
 
                   <h4 className="h4 mt-12 mb-8 text-gray-800">PRESCRIPTION</h4>
-                  <div className="text-[20px]">
-                    {historyPrescriptions?.map((prescription, index) => (
-                      <div key={index} className="mb-4 rounded rounded-[10px] border-gray-600 border w-2/3 bg-white shadow-lg p-4">
-                        <p><span className="font-bold">Medication: </span>{prescription.medication}</p>
-                        <p><span className="font-bold">Dosage: </span>{prescription.dosage}</p>
-                        <p><span className="font-bold">Frequency: </span>{prescription.frequency}</p>
-                        <p><span className="font-bold">Instructions: </span>{prescription.instructions}</p>
-                      </div>
-                    ))}
-                  </div>
+                  {historyPrescriptions.length > 0 ? (
+                    <div className="text-[20px]">
+                      {historyPrescriptions?.map((prescription, index) => (
+                        <div key={index} className="mb-4 rounded rounded-[10px] border-gray-600 border w-2/3 bg-white shadow-lg p-4">
+                          <p><span className="font-bold">Medication: </span>{prescription.medication}</p>
+                          <p><span className="font-bold">Dosage: </span>{prescription.dosage}</p>
+                          <p><span className="font-bold">Frequency: </span>{prescription.frequency}</p>
+                          <p><span className="font-bold">Instructions: </span>{prescription.instructions}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ): (
+                    <div className="border w-2/3 border-gray-600">
+                    <EmptyTableData/>
+                    </div>
+                  )}
 
                   {/* File Upload Section */}
                   <h4 className="h4 my-8 text-gray-800">Document</h4>

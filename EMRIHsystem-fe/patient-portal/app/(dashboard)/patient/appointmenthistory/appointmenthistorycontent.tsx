@@ -126,12 +126,12 @@ const AppointmentHistoryPage: React.FC = () => {
     setOpenHistory(false);
   };
 
-  const handleOpenHistory = async (appointmendId : number, session: string, doctor: string, hospital: string) => {
-    setHistoryAppoId(appointmendId);
+  const handleOpenHistory = async (appointmentId : number, session: string, doctor: string, hospital: string) => {
+    setHistoryAppoId(appointmentId);
     setHistorySession(session)
     setHistoryDoctor(doctor)
     setHistoryHospital(hospital)
-    const response = await axios.get(`http://localhost:3000/emr/patient/latest-soap/${appointmendId}`,  {
+    const response = await axios.get(`http://localhost:3000/emr/patient/latest-soap/${appointmentId}`,  {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         },
@@ -143,7 +143,7 @@ const AppointmentHistoryPage: React.FC = () => {
     
     const l_soap = latestSOAP.soapNotes;
     const filteredSOAP: SOAPNotes[] = l_soap.filter(
-      (notes: { appointmentId: number; }) => notes.appointmentId === appointmendId
+      (notes: { appointmentId: number; }) => notes.appointmentId === appointmentId
     );
     
     let latestSoapNote = null;
@@ -153,11 +153,15 @@ const AppointmentHistoryPage: React.FC = () => {
       });
     }
 
+    const documents: Document[] = latestSOAP.documents.filter(
+      (doc: { appointmentid: number; }) => doc.appointmentid === appointmentId
+    );
+
     setHistoryPersonalData(latestSOAP.personalData);
     setHistoryDiagnose(latestSOAP.illnessDiagnosis);
     setHistorySOAP(latestSoapNote);
     setHistoryPrescriptions(latestSOAP.doctorPrescriptions);
-    setHistoryDocuments(latestSOAP.documents);
+    setHistoryDocuments(documents);
 
     setOpenHistory(true);
   }

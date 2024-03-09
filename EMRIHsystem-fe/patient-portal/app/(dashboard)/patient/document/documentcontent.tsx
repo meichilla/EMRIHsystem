@@ -93,7 +93,7 @@ const DocumentContent: React.FC = () => {
                                         frameBorder="0"
                                         scrolling="no"
                                         width="100%"
-                                        height="400px"
+                                        height="200px"
                                       ></iframe>
                                     ) : (
                                       <img src={doc.fileUrl} alt={doc.filename} style={{ width: '200px', height: '200px' }} />
