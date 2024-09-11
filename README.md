@@ -1,4 +1,4 @@
-Thesis Design - Blockchain Based Electronic Medical Record for InterHospital System
+Thesis - Design Blockchain Based Electronic Medical Record for InterHospital System
 
 FE :
 - Patient Portal
