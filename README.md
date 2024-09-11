@@ -1,6 +1,6 @@
 # EMRIHsystem
 
-Thesis Design - Blockchain Based Electronic Medical Record for InterHospital System
+Thesis - Design Blockchain Based Electronic Medical Record for InterHospital System
 
 FE :
 - Patient Portal
@@ -8,53 +8,53 @@ FE :
 
 **Landing Page**
 
-![login](https://github.com/user-attachments/assets/28535de5-1093-4741-8fbf-34b635416140)
+![landing page](https://github.com/user-attachments/assets/33c3900c-42d2-4ada-9dde-e292a8cbb25f)
 
 **Patient Registration**
 
-![registration](https://github.com/user-attachments/assets/0aee22b3-a9f0-4f3b-95dd-1ccd90abeae2)
+![register](https://github.com/user-attachments/assets/2fbd1934-b1e2-43d4-9dea-e1c26602c65e)
 
 **Login - Patient View**
 
-![login2](https://github.com/user-attachments/assets/f857ff41-a94f-48e2-b229-9885705b4e91)
+![login](https://github.com/user-attachments/assets/90eefab4-184d-4685-aea5-8734577cca0b)
 
 **Dashboard EMR Patient**
 
-![dashboard patient portal](https://github.com/user-attachments/assets/313ba73a-668a-42f1-b167-77d83f1cf899)
+![dahsboard patient](https://github.com/user-attachments/assets/3f366ae9-02a4-405b-b8fd-b98deff8c1a1)
+![view soap patient](https://github.com/user-attachments/assets/b768f39b-3c7c-497a-bdee-0c6effced1ca)
 
 **Notification**
 
-![notif](https://github.com/user-attachments/assets/34ce93a0-e6a5-4866-8d53-94b07e900cb4)
+![notifications](https://github.com/user-attachments/assets/9982aa00-09d7-4477-adde-5d9e2266ab13)
 
 **Login - Doctor View**
 
-![logindokter](https://github.com/user-attachments/assets/a1dfb5fc-89fc-4133-93d3-3000b207d3fa)
-![logindokter2](https://github.com/user-attachments/assets/7c2b9001-088f-4c04-b301-16e776afa094)
+![login doctor](https://github.com/user-attachments/assets/bb2bd9f7-5190-47f0-848d-67d56aba05ac)
+![login doctor 2](https://github.com/user-attachments/assets/ffcfb90b-d0b9-44bd-9aed-fc9e63c015c0)
+
 
 **Menu Session**
 
-![menu sessions](https://github.com/user-attachments/assets/2bc9b602-7218-429d-a2b0-d1bc894a1dcf)
+![menu session ](https://github.com/user-attachments/assets/ba093fbd-f601-4de5-a431-6be38845f077)
+
 
 **Menu Patient**
 
-![menu patients](https://github.com/user-attachments/assets/81b73d0c-c34d-4e36-8e12-54f2499a7d0e)
+![menu patient](https://github.com/user-attachments/assets/b510b866-788e-49b5-ab52-289e1da10edf)
 
 **Menu Prescription**
 
-![prescription menu](https://github.com/user-attachments/assets/a45bc4fa-1a14-4d92-893a-448f50256463)
+![menu prescriptions patient](https://github.com/user-attachments/assets/a9321816-4192-4ca1-9c60-a51eaedfac74)
 
-**EMR - Doctor**
-
-![emrbydoctor](https://github.com/user-attachments/assets/82a0144f-c36b-4c67-8f38-3d6f5e7dfdec)
+**EMR Patient - Doctor View**
+![emr by doctor](https://github.com/user-attachments/assets/80945257-0b4a-4e05-9a09-2d47debfdb8d)
 
 **Appointment History**
 
-![appointment history](https://github.com/user-attachments/assets/ce4935c2-2f57-4c7b-9dcf-a1115d18e20d)
-![riwayat](https://github.com/user-attachments/assets/72551c50-f819-44ac-be9f-be396c4b67c8)
+![appointment history patient](https://github.com/user-attachments/assets/f700dbfc-9890-40ae-9d9d-800db836f627)
 
 **Menu SOAP**
 
-![submit token and password](https://github.com/user-attachments/assets/69c3eabf-3cfe-4da7-9cec-6db0b3adc74f)
-![submitsoap](https://github.com/user-attachments/assets/68041672-d336-4fe9-b726-c2201212f8fe)
-![soap1](https://github.com/user-attachments/assets/88b2d3b0-ac88-45a7-ac41-e239eef31875)
-![soap2](https://github.com/user-attachments/assets/5b5e012c-ae39-4b46-85ff-a0548d55234d)
+![submit token soap](https://github.com/user-attachments/assets/cae62af7-78d0-423b-9b18-730bbf870b37)
+![view soap history](https://github.com/user-attachments/assets/65c16102-996a-4d4f-9167-6e3ffe924d72)
+![add soap doctor](https://github.com/user-attachments/assets/bf0da6cd-722c-4dfc-a975-4bad12d3d002)
